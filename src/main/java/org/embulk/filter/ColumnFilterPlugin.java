@@ -162,8 +162,24 @@ public class ColumnFilterPlugin implements FilterPlugin
                 String name                   = column.getName();
                 Optional<Type> type           = column.getType();
                 Optional<Object> defaultValue = column.getDefault();
+                Optional<String> src = column.getSrc();
 
                 if (type.isPresent() && defaultValue.isPresent()) { // add column
+                    if (src.isPresent()) {
+                        boolean type_unmatched = true;
+                        String src_name = src.get();
+                        Type src_type = type.get();
+                        System.out.println("hoge = " + src.get());
+                        for (Column inputColumn: inputSchema.getColumns()) {
+                            if (src_name.equals(inputColumn.getName()) &&
+                                src_type.equals(inputColumn.getType())) {
+                                type_unmatched = false;
+                            }
+                        }
+                        if (type_unmatched) {
+                            throw new SchemaConfigException(String.format("add_columns: Column '%s' unmatch \"type\"", name));
+                        }
+                    }
                     Column outputColumn = new Column(i++, name, type.get());
                     builder.add(outputColumn);
                 }
