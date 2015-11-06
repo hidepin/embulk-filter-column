@@ -71,6 +71,10 @@ public class ColumnFilterPlugin implements FilterPlugin
         @Config("timezone")
         @ConfigDefault("null")
         public Optional<DateTimeZone> getTimeZone();
+
+        @Config("src")
+        @ConfigDefault("null")
+        public Optional<String> getSrc();
     }
 
     public interface PluginTask extends Task, TimestampParser.Task
@@ -250,11 +254,26 @@ public class ColumnFilterPlugin implements FilterPlugin
             outputInputColumnMap.put(outputColumn, inputColumn); // NOTE: inputColumn would be null
         }
 
-        // Map outputColumn => default value if present
+        // Map outputColumn => src and default value if present
+        final HashMap<Column, String> outputSrcMap = new HashMap<Column, String>();
         final HashMap<Column, Object> outputDefaultMap = new HashMap<Column, Object>();
+
         for (Column outputColumn: outputSchema.getColumns()) {
             String name = outputColumn.getName();
             Type   type = outputColumn.getType();
+
+            String src_name = null;
+            List<ColumnConfig> columnConfigs = task.getAddColumns();
+
+            for (ColumnConfig columnConfig: columnConfigs) {
+                if (columnConfig.getName().equals(name) &&
+                    columnConfig.getSrc().isPresent()) {
+                    src_name = (String)columnConfig.getSrc().get();
+                }
+            }
+            if (src_name != null) {
+                outputSrcMap.put(outputColumn, src_name);
+            }
 
             Object default_value = getDefault(name, type, task.getColumns(), task);
             if (default_value == null) {
@@ -346,8 +365,16 @@ public class ColumnFilterPlugin implements FilterPlugin
                 public void stringColumn(Column outputColumn) {
                     Column inputColumn = outputInputColumnMap.get(outputColumn);
                     if (inputColumn == null || pageReader.isNull(inputColumn)) {
+                        String src_value = null;
+                        String src_name = (String)outputSrcMap.get(outputColumn);
+                        if (src_name != null &&
+                            !pageReader.isNull(inputSchema.lookupColumn(src_name))) {
+                            src_value = (String)pageReader.getString(inputSchema.lookupColumn(src_name));
+                        }
                         String default_value = (String)outputDefaultMap.get(outputColumn);
-                        if (default_value != null) {
+                        if (src_value != null) {
+                            pageBuilder.setString(outputColumn, src_value);
+                        } else if (default_value != null) {
                             pageBuilder.setString(outputColumn, default_value);
                         } else {
                             pageBuilder.setNull(outputColumn);
