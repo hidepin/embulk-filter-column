@@ -169,7 +169,6 @@ public class ColumnFilterPlugin implements FilterPlugin
                         boolean type_unmatched = true;
                         String src_name = src.get();
                         Type src_type = type.get();
-                        System.out.println("hoge = " + src.get());
                         for (Column inputColumn: inputSchema.getColumns()) {
                             if (src_name.equals(inputColumn.getName()) &&
                                 src_type.equals(inputColumn.getType())) {
@@ -177,7 +176,7 @@ public class ColumnFilterPlugin implements FilterPlugin
                             }
                         }
                         if (type_unmatched) {
-                            throw new SchemaConfigException(String.format("add_columns: Column '%s' unmatch \"type\"", name));
+                            throw new SchemaConfigException(String.format("add_columns: Column '%s' unmatch \"src column name\" or \"type\"", name));
                         }
                     }
                     Column outputColumn = new Column(i++, name, type.get());
