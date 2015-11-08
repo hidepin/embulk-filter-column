@@ -166,16 +166,17 @@ public class ColumnFilterPlugin implements FilterPlugin
 
                 if (type.isPresent() && defaultValue.isPresent()) { // add column
                     if (src.isPresent()) {
-                        boolean type_unmatched = true;
+                        boolean matched = false;
                         String src_name = src.get();
                         Type src_type = type.get();
                         for (Column inputColumn: inputSchema.getColumns()) {
                             if (src_name.equals(inputColumn.getName()) &&
                                 src_type.equals(inputColumn.getType())) {
-                                type_unmatched = false;
+                                matched = true;
+                                break;
                             }
                         }
-                        if (type_unmatched) {
+                        if (! matched) {
                             throw new SchemaConfigException(String.format("add_columns: Column '%s' unmatch \"src column name\" or \"type\"", name));
                         }
                     }
