@@ -165,21 +165,7 @@ public class ColumnFilterPlugin implements FilterPlugin
                 Optional<String> src = column.getSrc();
 
                 if (type.isPresent() && defaultValue.isPresent()) { // add column
-                    if (src.isPresent()) {
-                        boolean matched = false;
-                        String src_name = src.get();
-                        Type src_type = type.get();
-                        for (Column inputColumn: inputSchema.getColumns()) {
-                            if (src_name.equals(inputColumn.getName()) &&
-                                src_type.equals(inputColumn.getType())) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                        if (! matched) {
-                            throw new SchemaConfigException(String.format("add_columns: Column '%s' unmatch \"src column name\" or \"type\"", name));
-                        }
-                    }
+                    checkSrc(name, src, type, inputSchema);
                     Column outputColumn = new Column(i++, name, type.get());
                     builder.add(outputColumn);
                 }
@@ -192,6 +178,25 @@ public class ColumnFilterPlugin implements FilterPlugin
         Schema outputSchema = new Schema(builder.build());
 
         control.run(task.dump(), outputSchema);
+    }
+
+    private void checkSrc(String name, Optional<String> src, Optional<Type> type,
+                              final Schema inputSchema) {
+        if (src.isPresent()) {
+            boolean matched = false;
+            String src_name = src.get();
+            Type src_type = type.get();
+            for (Column inputColumn: inputSchema.getColumns()) {
+                if (src_name.equals(inputColumn.getName()) &&
+                    src_type.equals(inputColumn.getType())) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (! matched) {
+                throw new SchemaConfigException(String.format("add_columns: Column '%s' unmatch \"src column name\" or \"type\"", name));
+            }
+        }
     }
 
     private Column getColumn(String name, Schema schema) {
