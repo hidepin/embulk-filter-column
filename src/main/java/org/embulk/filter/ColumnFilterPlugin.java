@@ -135,6 +135,7 @@ public class ColumnFilterPlugin implements FilterPlugin
                 String name                   = column.getName();
                 Optional<Type>   type         = column.getType();
                 Optional<Object> defaultValue = column.getDefault();
+                Optional<String> src = column.getSrc();
 
                 Column inputColumn = getColumn(name, inputSchema);
                 if (inputColumn != null) { // filter column
@@ -142,6 +143,7 @@ public class ColumnFilterPlugin implements FilterPlugin
                     builder.add(outputColumn);
                 }
                 else if (type.isPresent() && defaultValue.isPresent()) { // add column
+                    checkSrc(name, src, type, inputSchema);
                     Column outputColumn = new Column(i++, name, type.get());
                     builder.add(outputColumn);
                 }
