@@ -211,6 +211,16 @@ public class ColumnFilterPlugin implements FilterPlugin
         return null;
     }
 
+    private String getSrc(String name, List<ColumnConfig> columnConfigs) {
+        for (ColumnConfig columnConfig : columnConfigs) {
+            if (columnConfig.getName().equals(name) &&
+                columnConfig.getSrc().isPresent()) {
+                return (String)columnConfig.getSrc().get();
+            }
+        }
+        return null;
+    }
+
     private Object getDefault(String name, Type type, List<ColumnConfig> columnConfigs, PluginTask task) {
         for (ColumnConfig columnConfig : columnConfigs) {
             if (columnConfig.getName().equals(name)) {
@@ -285,14 +295,9 @@ public class ColumnFilterPlugin implements FilterPlugin
             String name = outputColumn.getName();
             Type   type = outputColumn.getType();
 
-            String src_name = null;
-            List<ColumnConfig> columnConfigs = task.getAddColumns();
-
-            for (ColumnConfig columnConfig: columnConfigs) {
-                if (columnConfig.getName().equals(name) &&
-                    columnConfig.getSrc().isPresent()) {
-                    src_name = (String)columnConfig.getSrc().get();
-                }
+            String src_name = getSrc(name, task.getColumns());
+            if (src_name == null){
+                src_name = getSrc(name, task.getAddColumns());
             }
             if (src_name != null) {
                 outputSrcMap.put(outputColumn, src_name);
